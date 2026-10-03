@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+<script>
+/* ubg-split-parts: GitHub Pages refuses files over 100 MB, so these were split
+   into .partN files. Requests for the original URL get the joined parts. */
+(function () {
+  var PARTS = {"Build/build.data":["Build/build.data.part1","Build/build.data.part2"]};
+  var joined = {};
+  function key(u) {
+    u = String(u || '').split(/[?#]/)[0];
+    for (var k in PARTS) if (u === k || u.slice(-k.length - 1) === '/' + k) return k;
+    return null;
+  }
+  var realFetch = window.fetch.bind(window);
+  function join(k) {
+    return joined[k] || (joined[k] = Promise.all(PARTS[k].map(function (p) {
+      return realFetch(p).then(function (r) { if (!r.ok) throw new Error(p + ' HTTP ' + r.status); return r.arrayBuffer(); });
+    })).then(function (bufs) { return new Blob(bufs); }));
+  }
+  window.fetch = function (input, init) {
+    var k = key(typeof input === 'string' ? input : input && input.url);
+    if (!k) return realFetch(input, init);
+    return join(k).then(function (b) {
+      return new Response(b, { status: 200, headers: { 'Content-Type': 'application/octet-stream', 'Content-Length': String(b.size) } });
+    });
+  };
+})();
+</script>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Unity WebGL Player | PlantsVsZombiesRH</title>
+  </head>
+  <body style="text-align: center; padding: 0; border: 0; margin: 0;">
+    <canvas id="unity-canvas" width=960 height=600 tabindex="-1" style="width: 960px; height: 600px; background: #000000"></canvas>
+    <script src="Build/build.loader.js"></script>
+    <script>
+      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+        // Mobile device style: fill the whole browser client area with the game canvas:
+        var meta = document.createElement('meta');
+        meta.name = 'viewport';
+        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
+        document.getElementsByTagName('head')[0].appendChild(meta);
+
+        var canvas = document.querySelector("#unity-canvas");
+        canvas.style.width = "100%";
+        canvas.style.height = "100%";
+        canvas.style.position = "fixed";
+
+        document.body.style.textAlign = "left";
+      }
+
+      createUnityInstance(document.querySelector("#unity-canvas"), {
+        dataUrl: "Build/build.data",
+        frameworkUrl: "Build/build.framework.js",
+        codeUrl: "Build/build.wasm",
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: "LanPiaoPiao",
+        productName: "PlantsVsZombiesRH",
+        productVersion: "1.0",
+        // matchWebGLToCanvasSize: false, // Uncomment this to separately control WebGL canvas render size and DOM element size.
+        // devicePixelRatio: 1, // Uncomment this to override low DPI rendering on high DPI displays.
+      });
+    </script>
+  </body>
+</html>
